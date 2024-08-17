@@ -9,7 +9,7 @@ using ProgrammersBlog.Entities.Concrete;
 
 namespace ProgrammersBlog.Data.Concrete.EntityFramework.Mappings
 {
-    public class CommentMap:IEntityTypeConfiguration<Comment>
+    public class CommentMap : IEntityTypeConfiguration<Comment>
     {
         public void Configure(EntityTypeBuilder<Comment> builder)
         {
@@ -68,8 +68,7 @@ namespace ProgrammersBlog.Data.Concrete.EntityFramework.Mappings
                     ModifiedByName = "InitialCreate",
                     ModifiedDate = DateTime.Now,
                     Note = "JavaScript Makale Yorumu",
-                }
-                )
+                });
         }
     }
 }
