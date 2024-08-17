@@ -23,8 +23,6 @@ namespace ProgrammersBlog.Data.Concrete
             _context = context;
         }
 
-        
-
         public IArticleRepository Articles => _articleRepository ?? new EfArticleRepository(_context);
         public ICategoryRepository Categories => _categoryRepository ?? new EfCategoryRepository(_context);
         public ICommentRepository Comments => _commentRepository ?? new EfCommentRepository(_context);
