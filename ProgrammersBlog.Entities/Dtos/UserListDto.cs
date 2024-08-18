@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
+using ProgrammersBlog.Entities.Concrete;
 using ProgrammersBlog.Shared.Entities.Abstract;
 
-namespace ProgrammersBlog.Entities.Concrete
+namespace ProgrammersBlog.Entities.Dtos
 {
-    public class Role:IdentityRole<int>
+    public class UserListDto:DtoGetBase
     {
-       
+        public IList<User> Users { get; set; }
     }
 }
