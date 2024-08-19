@@ -2,6 +2,7 @@ using ProgrammersBlog.Services.AutoMapper.Profiles;
 using ProgrammersBlog.Services.Extensions;
 using System.Text.Json.Serialization;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -14,7 +15,7 @@ builder.Services.AddControllersWithViews()
         opt.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
     });
-builder.Services.AddAutoMapper(typeof(CategoryProfile),typeof(ArticleProfile));
+builder.Services.AddAutoMapper(typeof(CategoryProfile), typeof(ArticleProfile));
 builder.Services.LoadMyServices();
 
 var app = builder.Build();
