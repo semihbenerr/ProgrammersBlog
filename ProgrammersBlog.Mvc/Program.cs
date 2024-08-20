@@ -1,13 +1,16 @@
 using ProgrammersBlog.Services.AutoMapper.Profiles;
 using ProgrammersBlog.Services.Extensions;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http.Json;
+using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json.Serialization;
-
+using ProgrammersBlog.Mvc.AutoMapper.Profiles;
+using ProgrammersBlog.Mvc.Helpers.Abstract;
+using ProgrammersBlog.Mvc.Helpers.Concrete;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddRazorPages();
-
 builder.Services.AddControllersWithViews()
     .AddRazorRuntimeCompilation()
     .AddJsonOptions(opt =>
@@ -15,33 +18,43 @@ builder.Services.AddControllersWithViews()
         opt.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
     });
-builder.Services.AddAutoMapper(typeof(CategoryProfile), typeof(ArticleProfile));
-builder.Services.LoadMyServices();
 
-var app = builder.Build();
+builder.Services.AddSession();
+builder.Services.AddAutoMapper(typeof(CategoryProfile), typeof(ArticleProfile), typeof(UserProfile));
+builder.Services.LoadMyServices(builder.Configuration.GetConnectionString("LocalDB"));
+builder.Services.AddScoped<IImageHelper, ImageHelper>();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+builder.Services.ConfigureApplicationCookie(options =>
 {
-    app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+    options.LoginPath = new PathString("/Admin/User/Login");
+    options.LogoutPath = new PathString("/Admin/User/Logout");
+    options.Cookie = new CookieBuilder
+    {
+        Name = "ProgrammersBlog",
+        HttpOnly = true,
+        SameSite = SameSiteMode.Strict,
+        SecurePolicy = CookieSecurePolicy.SameAsRequest 
+    };
+    options.SlidingExpiration = true;
+    options.ExpireTimeSpan = TimeSpan.FromDays(7);
+    options.AccessDeniedPath = new PathString("/Admin/User/AccessDenied");
+});
+var app = builder.Build();
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+    app.UseStatusCodePages();
 }
-
-app.UseHttpsRedirection();
+app.UseSession();
 app.UseStaticFiles();
-
 app.UseRouting();
-app.MapAreaControllerRoute(
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllerRoute(
     name: "Admin",
-    areaName: "Admin",
     pattern: "Admin/{controller=Home}/{action=Index}/{id?}"
 );
 
 app.MapDefaultControllerRoute();
-
-app.UseAuthorization();
-
-app.MapRazorPages();
 
 app.Run();
