@@ -14,6 +14,8 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using NToastNotify;
+using ProgrammersBlog.Entities.ComplexTypes;
 using ProgrammersBlog.Mvc.Areas.Admin.Models;
 using ProgrammersBlog.Mvc.Helpers.Abstract;
 
@@ -26,13 +28,15 @@ namespace ProgrammersBlog.Mvc.Areas.Admin.Controllers
         private readonly SignInManager<User> _signInManager;
         private readonly IMapper _mapper;
         private readonly IImageHelper _imageHelper;
+        private readonly IToastNotification _toastNotification;
 
-        public UserController(UserManager<User> userManager, IMapper mapper, SignInManager<User> signInManager, IImageHelper imageHelper)
+        public UserController(UserManager<User> userManager, IMapper mapper, SignInManager<User> signInManager, IImageHelper imageHelper, IToastNotification toastNotification)
         {
             _userManager = userManager;
             _mapper = mapper;
             _signInManager = signInManager;
             _imageHelper = imageHelper;
+            _toastNotification = toastNotification;
         }
         [Authorize(Roles="Admin")]
         public async Task<IActionResult> Index()
@@ -115,7 +119,7 @@ namespace ProgrammersBlog.Mvc.Areas.Admin.Controllers
         {
             if (ModelState.IsValid)
             {
-                var uploadedImageDtoResult = await _imageHelper.UploadUserImage(userAddDto.UserName,userAddDto.PictureFile);
+                var uploadedImageDtoResult = await _imageHelper.Upload(userAddDto.UserName,userAddDto.PictureFile,PictureType.User);
                 userAddDto.Picture = uploadedImageDtoResult.ResultStatus == ResultStatus.Success
                     ? uploadedImageDtoResult.Data.FullName
                     : "userImages/defaultUser.png";
@@ -216,7 +220,7 @@ namespace ProgrammersBlog.Mvc.Areas.Admin.Controllers
                 var oldUserPicture = oldUser.Picture;
                 if (userUpdateDto.PictureFile != null)
                 {
-                    var uploadedImageDtoResult = await _imageHelper.UploadUserImage(userUpdateDto.UserName, userUpdateDto.PictureFile);
+                    var uploadedImageDtoResult = await _imageHelper.Upload(userUpdateDto.UserName, userUpdateDto.PictureFile,PictureType.User);
                     userUpdateDto.Picture = uploadedImageDtoResult.ResultStatus == ResultStatus.Success
                         ? uploadedImageDtoResult.Data.FullName
                         : "userImages/defaultUser.png";
@@ -291,7 +295,7 @@ namespace ProgrammersBlog.Mvc.Areas.Admin.Controllers
                 var oldUserPicture = oldUser.Picture;
                 if (userUpdateDto.PictureFile != null)
                 {
-                    var uploadedImageDtoResult = await _imageHelper.UploadUserImage(userUpdateDto.UserName, userUpdateDto.PictureFile);
+                    var uploadedImageDtoResult = await _imageHelper.Upload(userUpdateDto.UserName, userUpdateDto.PictureFile,PictureType.User);
                     userUpdateDto.Picture = uploadedImageDtoResult.ResultStatus == ResultStatus.Success
                         ? uploadedImageDtoResult.Data.FullName
                         : "userImages/defaultUser.png";
@@ -310,7 +314,7 @@ namespace ProgrammersBlog.Mvc.Areas.Admin.Controllers
                     {
                         _imageHelper.Delete(oldUserPicture);
                     }
-                    TempData.Add("SuccessMessage", $"{updatedUser.UserName} adlı kullanıcı başarıyla güncellenmiştir.");
+                    _toastNotification.AddSuccessToastMessage($"Bilgileriniz başarıyla güncellenmiştir.");
                     return View(userUpdateDto);
                 }
                 else
@@ -352,7 +356,7 @@ namespace ProgrammersBlog.Mvc.Areas.Admin.Controllers
                         await _userManager.UpdateSecurityStampAsync(user);
                         await _signInManager.SignOutAsync();
                         await _signInManager.PasswordSignInAsync(user, userPasswordChangeDto.NewPassword, true, false);
-                        TempData.Add("SuccessMessage", $"Şifreniz başarıyla değiştirilmiştir.");
+                        _toastNotification.AddSuccessToastMessage($"Şifreniz başarıyla değiştirilmiştir.");
                         return View();
                     }
                     else

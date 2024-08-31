@@ -10,6 +10,9 @@ using ProgrammersBlog.Mvc.Helpers.Concrete;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+var configuration = builder.Configuration;
+
 // Add services to the container.
 builder.Services.AddControllersWithViews()
     .AddRazorRuntimeCompilation()
@@ -17,11 +20,12 @@ builder.Services.AddControllersWithViews()
     {
         opt.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
-    });
+    })
+    .AddNToastNotifyToastr();
 
 builder.Services.AddSession();
-builder.Services.AddAutoMapper(typeof(CategoryProfile), typeof(ArticleProfile), typeof(UserProfile));
-builder.Services.LoadMyServices(builder.Configuration.GetConnectionString("LocalDB"));
+builder.Services.AddAutoMapper(typeof(CategoryProfile), typeof(ArticleProfile), typeof(UserProfile), typeof(ViewModelsProfile));
+builder.Services.LoadMyServices(connectionString: configuration.GetConnectionString("LocalDB"));
 builder.Services.AddScoped<IImageHelper, ImageHelper>();
 
 builder.Services.ConfigureApplicationCookie(options =>
@@ -33,28 +37,44 @@ builder.Services.ConfigureApplicationCookie(options =>
         Name = "ProgrammersBlog",
         HttpOnly = true,
         SameSite = SameSiteMode.Strict,
-        SecurePolicy = CookieSecurePolicy.SameAsRequest 
+        SecurePolicy = CookieSecurePolicy.SameAsRequest // Always
     };
     options.SlidingExpiration = true;
-    options.ExpireTimeSpan = TimeSpan.FromDays(7);
+    options.ExpireTimeSpan = System.TimeSpan.FromDays(7);
     options.AccessDeniedPath = new PathString("/Admin/User/AccessDenied");
 });
+
 var app = builder.Build();
+
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
     app.UseStatusCodePages();
 }
-app.UseSession();
+else
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+
+app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllerRoute(
-    name: "Admin",
-    pattern: "Admin/{controller=Home}/{action=Index}/{id?}"
-);
+app.UseNToastNotify();
 
-app.MapDefaultControllerRoute();
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapAreaControllerRoute(
+        name: "Admin",
+        areaName: "Admin",
+        pattern: "Admin/{controller=Home}/{action=Index}/{id?}"
+    );
+    endpoints.MapDefaultControllerRoute();
+});
 
 app.Run();
