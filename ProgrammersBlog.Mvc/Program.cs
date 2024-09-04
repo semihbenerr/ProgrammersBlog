@@ -10,10 +10,10 @@ using ProgrammersBlog.Mvc.Helpers.Concrete;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
+// IConfiguration eriþimi
 var configuration = builder.Configuration;
 
-// Add services to the container.
+// Services ekleme
 builder.Services.AddControllersWithViews()
     .AddRazorRuntimeCompilation()
     .AddJsonOptions(opt =>
@@ -24,8 +24,8 @@ builder.Services.AddControllersWithViews()
     .AddNToastNotifyToastr();
 
 builder.Services.AddSession();
-builder.Services.AddAutoMapper(typeof(CategoryProfile), typeof(ArticleProfile), typeof(UserProfile), typeof(ViewModelsProfile));
-builder.Services.LoadMyServices(connectionString: configuration.GetConnectionString("LocalDB"));
+builder.Services.AddAutoMapper(typeof(CategoryProfile), typeof(ArticleProfile), typeof(UserProfile), typeof(ViewModelsProfile), typeof(CommentProfile));
+builder.Services.LoadMyServices(configuration.GetConnectionString("LocalDB"));
 builder.Services.AddScoped<IImageHelper, ImageHelper>();
 
 builder.Services.ConfigureApplicationCookie(options =>
@@ -40,29 +40,22 @@ builder.Services.ConfigureApplicationCookie(options =>
         SecurePolicy = CookieSecurePolicy.SameAsRequest // Always
     };
     options.SlidingExpiration = true;
-    options.ExpireTimeSpan = System.TimeSpan.FromDays(7);
+    options.ExpireTimeSpan = TimeSpan.FromDays(7);
     options.AccessDeniedPath = new PathString("/Admin/User/AccessDenied");
 });
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Middleware ve HTTP request pipeline yapýlandýrmasý
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
     app.UseStatusCodePages();
 }
-else
-{
-    app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
-}
-
-app.UseHttpsRedirection();
-app.UseStaticFiles();
-app.UseRouting();
 
 app.UseSession();
+app.UseStaticFiles();
+app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseNToastNotify();
