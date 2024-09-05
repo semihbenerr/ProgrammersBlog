@@ -1,19 +1,22 @@
-using ProgrammersBlog.Services.AutoMapper.Profiles;
-using ProgrammersBlog.Services.Extensions;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using System.Text.Json.Serialization;
 using ProgrammersBlog.Mvc.AutoMapper.Profiles;
 using ProgrammersBlog.Mvc.Helpers.Abstract;
 using ProgrammersBlog.Mvc.Helpers.Concrete;
+using ProgrammersBlog.Services.AutoMapper.Profiles;
+using ProgrammersBlog.Services.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// IConfiguration eriþimi
+// Configuration
 var configuration = builder.Configuration;
 
-// Services ekleme
+// Add services to the container.
 builder.Services.AddControllersWithViews()
     .AddRazorRuntimeCompilation()
     .AddJsonOptions(opt =>
@@ -25,7 +28,7 @@ builder.Services.AddControllersWithViews()
 
 builder.Services.AddSession();
 builder.Services.AddAutoMapper(typeof(CategoryProfile), typeof(ArticleProfile), typeof(UserProfile), typeof(ViewModelsProfile), typeof(CommentProfile));
-builder.Services.LoadMyServices(configuration.GetConnectionString("LocalDB"));
+builder.Services.LoadMyServices(connectionString: configuration.GetConnectionString("LocalDB"));
 builder.Services.AddScoped<IImageHelper, ImageHelper>();
 
 builder.Services.ConfigureApplicationCookie(options =>
@@ -46,7 +49,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 var app = builder.Build();
 
-// Middleware ve HTTP request pipeline yapýlandýrmasý
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
